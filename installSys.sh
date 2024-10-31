@@ -42,6 +42,9 @@ while IFS= read -r path; do
         source_file="$dependencies_dir/$target_file"
 
         if [ -f "$source_file" ]; then
+            # Create the target directory if it does not exist
+            mkdir -p "$target_dir"
+            
             # Attempt to copy with sudo
             echo "Attempting to copy '$source_file' to '$target_dir/$target_file'..."
             sudo cp "$source_file" "$target_dir/"
@@ -59,6 +62,7 @@ done < "$paths_file"
 # Check the bin path from bin_path.txt
 echo "Checking bin path from '$bin_path_file':"
 while IFS= read -r bin_path; do
+    # Check if the bin path exists
     if [ -e "$bin_path" ]; then
         echo "Bin path '$bin_path' exists."
     else
@@ -69,17 +73,21 @@ while IFS= read -r bin_path; do
         bin_target_file=$(basename "$bin_path")
         bin_source_file="$bin_dir/$bin_target_file"
 
-        if [ -f "$bin_source_file" ]; then
-            # Attempt to copy with sudo
-            echo "Attempting to copy '$bin_source_file' to '$bin_target_dir/$bin_target_file'..."
-            sudo cp "$bin_source_file" "$bin_target_dir/"
-            if [ $? -eq 0 ]; then
-                echo "Copied '$bin_source_file' to '$bin_target_dir/$bin_target_file'."
-            else
-                echo "Failed to copy '$bin_source_file' to '$bin_target_dir/$bin_target_file'."
-            fi
+        # Create the target directory if it does not exist
+        mkdir -p "$bin_target_dir"
+    fi
+
+    # Attempt to copy the bin file
+    if [ -f "$bin_source_file" ]; then
+        # Attempt to copy with sudo
+        echo "Attempting to copy '$bin_source_file' to '$bin_target_dir/$bin_target_file'..."
+        sudo cp "$bin_source_file" "$bin_target_dir/"
+        if [ $? -eq 0 ]; then
+            echo "Copied '$bin_source_file' to '$bin_target_dir/$bin_target_file'."
         else
-            echo "Source file '$bin_source_file' does not exist in the bin folder."
+            echo "Failed to copy '$bin_source_file' to '$bin_target_dir/$bin_target_file'."
         fi
+    else
+        echo "Source file '$bin_source_file' does not exist in the bin folder."
     fi
 done < "$bin_path_file"
